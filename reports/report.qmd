@@ -112,20 +112,23 @@ Create your own copy of WDI_Country containing just countries.
 
 # drop table
 execute_ddl(cnx,"""
-drop table if exists wdi_country;
+drop table if exists sp25_rutanj_user.wdi_country;
 """)
 ```
 
 ```{python}
 # create table
 execute_ddl(cnx,"""
+CREATE TABLE wdi_country AS
+select * from world_bank_data.wdi_country
+WHERE not region is NULL
 """)
 ```
 
 ```{python}
 # show number of records
 run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+select count(*) from wdi_country
 """)
 ```
 
@@ -137,7 +140,7 @@ According to the World Bank, in 2020 there were how many countries in the world?
 ## (skills: select, aggregate)
 
 run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+select count(*) from wbi_country
 """)
 
 ```
@@ -154,7 +157,7 @@ What are all unique values of region in the wdi_country table?
 ## (skills: select, aggregate, order by)
 
 run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+select Region from wdi_country group by Region order by Region
 """)
 
 ```
@@ -168,7 +171,7 @@ How many countries are in each region?
 ## (skills: select, aggregate, group by, order by)
 
 run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+select Region, count(*) as `Count` from wdi_country group by Region order by Count desc
 """)
 
 ```
@@ -182,7 +185,7 @@ List the country full names and regions for all countries in north america.
 ## (skills: select, where, order by)
 
 run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+select `Long Name`, Region from wdi_country where Region = `North America`
 """)
 
 ```
@@ -195,7 +198,7 @@ select "doh!" as "Homer says ..." from dual
 ## (skills: select, where)
 
 run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+select `Long Name`, Region FROM wdi_country WHERE `Short Name` = `Qatar`
 """)
 
 ```
@@ -209,7 +212,7 @@ select "doh!" as "Homer says ..." from dual
 ## (skills: select, where, order by)
 
 run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+SELECT `Country Code`, `Short name`, `Long name`, `2-alpha code`, `WB-2 code` from wdi_country WHERE `2-alpha code` <> `WB-2 code`
 """)
 
 ```
@@ -223,13 +226,13 @@ select "doh!" as "Homer says ..." from dual
 ## (skills: select, aggregate, group by, order by)
 
 run_sql_and_return_html(cnx,"""
-select "doh!" as "Homer says ..." from dual
+select `Income Group` from wdi_country group by `Income Group`
 """)
 
 ```
 
 ## Task 12
-
+The issue here is that Venezuela is not assigned to an income group, although it should be assigned to "high income".
 ```{python}
 ## Mystery task.  Looking at the table from Task 11 (anything odd?) write the
 ## next obvious query based on the results in the table.
