@@ -5,7 +5,8 @@ title: Homework 8 - World Bank Analysis
 GITHUB URL:  <https://github.com/cmsc-vcu/cmsc408-sp2025-hw8-JonFRutan/tree/main>
 
 
-# Problem Background
+# Problem Background  
+In this assignment we will be working with real world data pulled from the World Bank Database.  
 
 
 ```{python}
