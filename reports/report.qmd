@@ -7,7 +7,7 @@ GITHUB URL:  <https://github.com/cmsc-vcu/cmsc408-sp2025-hw8-JonFRutan/tree/main
 
 # Problem Background  
 In this assignment we will be working with real world data pulled from the World Bank Database.  
-
+Note that the columns and tables need to be specified with backticks ` and are case sensitive.  
 
 ```{python}
 from helpers import create_database_engine, run_sql_and_return_df, run_sql_and_return_html, create_db_wrapper, execute_ddl_from_file, execute_ddl
@@ -45,7 +45,9 @@ In the following exercises, write the SQL as requested to discover the answer.
 
 ## Task 1
 
-How many records are in the country table?
+How many records are in the country table?  
+Dr. Leonard recommends we use run_sql_and_return_dataframe when testing the python code by running the cell.  
+BEFORE YOU TURN IT IN, replace these back with run_sql_and_return_html
 
 ```{python}
 # How many records are in the world_bank_data.wdi_country table?
@@ -413,6 +415,7 @@ select "doh!" as "Homer says ..." from dual
 
 ```
 
+BEFORE YOU TURN IT IN, replace these back with run_sql_and_return_html
 
 # Reflection
 
