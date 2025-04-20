@@ -128,7 +128,7 @@ WHERE Region is not null
 ```{python}
 # show number of records
 run_sql_and_return_html(cnx,"""
-select count(*) from wdi_country
+select count(*) from sp25_rutanj_user.wdi_country
 """)
 ```
 
@@ -140,7 +140,7 @@ According to the World Bank, in 2020 there were how many countries in the world?
 ## (skills: select, aggregate)
 
 run_sql_and_return_html(cnx,"""
-select count(*) from wdi_country
+select count(*) from sp25_rutanj_user.wdi_country
 """)
 
 ```
@@ -157,7 +157,7 @@ What are all unique values of region in the wdi_country table?
 ## (skills: select, aggregate, order by)
 
 run_sql_and_return_html(cnx,"""
-select distinct Region from wdi_country group by Region order by Region
+select distinct Region from wdi_country where Region is not null group by Region order by Region
 """)
 
 ```
@@ -198,7 +198,7 @@ select `Short Name`, `Long Name`, Region from wdi_country where Region = "North 
 ## (skills: select, where)
 
 run_sql_and_return_html(cnx,"""
-select `Long Name`, Region FROM wdi_country WHERE `Short Name` = "Qatar"
+select `Short Name`, `Long Name`, Region FROM wdi_country WHERE `Short Name` = "Qatar"
 """)
 
 ```
@@ -227,7 +227,7 @@ SELECT `Country Code`, `Short name`, `Long name`, `2-alpha code`, `WB-2 code` fr
 
 run_sql_and_return_html(cnx,"""
 select `Income Group`, count(*) as Count
-from wdi_country group by `Income Group`
+from wdi_country
 group by `Income Group`
 order by Count desc
 """)
@@ -307,14 +307,20 @@ order by Region, `Income Group`
 ## (skills: select, aggregate, group by, nested query)
 
 run_sql_and_return_html(cnx,"""
-select Region,
-sum(case when `Income Group` = "High income" then 1 else 0 end) as High,
-sum(case when `Income Group` = "Upper middle income" then 1 else 0 end) as `Upper Middle`,
-sum(case when `Income Group` = "Lower middle income" then 1 else 0 end) as `Lower Middle`,
-sum(case when `Income Group` = "Low income" then 1 else 0 end) as Low,
-sum(case when `Income Group` is null then 1 else 0 end) as Unknown,
-count(*) as Total
-from sp25_rutanj_user.wdi_country group by Region order by Region
+select 
+  Region,
+  sum(case when `Income Group` = 'High income' then 1 else 0 end) as High,
+  sum(case when `Income Group` = 'Upper middle income' then 1 else 0 end) as `Upper Middle`,
+  sum(case when `Income Group` = 'Lower middle income' then 1 else 0 end) as `Lower Middle`,
+  sum(case when `Income Group` = 'Low income' then 1 else 0 end) as Low,
+  sum(case when `Income Group` is null then 1 else 0 end) as Unknown,
+  sum(1) as Total
+from 
+  sp25_rutanj_user.wdi_country
+group by 
+  Region
+order by 
+  Region
 """)
 
 ```
@@ -382,7 +388,7 @@ order by `Short Name`
 run_sql_and_return_html(cnx,"""
 with pairings as (select r.Region, i.`Income Group` from (select distinct Region from sp25_rutanj_user.wdi_country where Region is not null) r cross join (select distinct `Income Group` from sp25_rutanj_user.wdi_country where `Income Group` is not null) i),
 existing_pairs as (select Region, `Income Group` from sp25_rutanj_user.wdi_country group by Region, `Income Group`)
-select pairings.Region, pairings.`Income Group` from pairings left join existing_pairs
+select pairings.Region, pairings.`Income Group` from pairings, 0 as CountryCount left join existing_pairs
 on pairings.Region = existing_pairs.Region
 and pairings.`Income Group` = existing_pairs.`Income Group` where existing_pairs.Region is null
 order by pairings.Region, pairings.`Income Group`
@@ -424,7 +430,7 @@ group by `Income Group`),
 totals as (
 select count(*) as total from sp25_rutanj_user.wdi_country
 where Region is not null and `Income Group` is not null)
-select c.region, c.`Income Group`, r.region_total, i.income_total, t.total, round((c.CountryCount/t.total) * 100, 2) as PercentageTotal
+select c.region, c.`Income Group`, c.CountryCount, r.region_total, i.income_total, t.total, round((c.CountryCount/t.total) * 100, 2) as PercentageTotal
 from counts c
 join region_totals r on c.Region = r.Region
 join income_totals i on c.`Income Group` = i.`Income Group`
@@ -482,9 +488,9 @@ run_sql_and_return_html(cnx,"""
 with total as (
 select count(*) as total
 from sp25_rutanj_user.wdi_country where Region is not null and `Income Group` is not null)
-select `Income Group`, count(*) as count, (select total from total) as total, round(count(*)*100.0/(select total from total), 2) as percantage from sp25_rutanj_user.wdi_country
+select `Income Group`, count(*) as count, (select total from total) as total, round(count(*)*100.0/(select total from total), 1) as percentage from sp25_rutanj_user.wdi_country
 where Region is not null and `Income Group` is not null
-group by `Income Group` order by percantage desc
+group by `Income Group` order by percentage desc
 """)
 
 ```
