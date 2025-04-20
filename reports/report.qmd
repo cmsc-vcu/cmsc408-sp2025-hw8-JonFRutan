@@ -93,7 +93,7 @@ List all non-countries.
 ## (skills: select, where)
 
 run_sql_and_return_html(cnx,"""
-select * from world_bank_data.wdi_country
+select `Short Name` from world_bank_data.wdi_country
 where Region is null
 """)
 ```
@@ -121,7 +121,7 @@ drop table if exists sp25_rutanj_user.wdi_country;
 execute_ddl(cnx,"""
 CREATE TABLE sp25_rutanj_user.wdi_country AS
 select * from world_bank_data.wdi_country
-WHERE not region is NULL
+WHERE Region is not null
 """)
 ```
 
@@ -157,7 +157,7 @@ What are all unique values of region in the wdi_country table?
 ## (skills: select, aggregate, order by)
 
 run_sql_and_return_html(cnx,"""
-select Region from wdi_country group by Region order by Region
+select distinct Region from wdi_country group by Region order by Region
 """)
 
 ```
@@ -171,7 +171,7 @@ How many countries are in each region?
 ## (skills: select, aggregate, group by, order by)
 
 run_sql_and_return_html(cnx,"""
-select Region, count(*) as `Count` from wdi_country group by Region order by Count desc
+select Region, count(*) as `Count` from sp25_rutanj_user.wdi_country group by Region order by Count desc
 """)
 
 ```
@@ -185,7 +185,7 @@ List the country full names and regions for all countries in north america.
 ## (skills: select, where, order by)
 
 run_sql_and_return_html(cnx,"""
-select `Long Name`, Region from wdi_country where Region = "North America"
+select `Short Name`, `Long Name`, Region from wdi_country where Region = "North America"
 """)
 
 ```
@@ -244,7 +244,8 @@ The issue here is that Venezuela is not assigned to an income group, although it
 ## in the first column.
 
 run_sql_and_return_html(cnx,"""
-select `Short Name`, `Income Group` from wdi_country where `Income Group` is null and Region is not null
+select `Short Name`, Region, `Income Group` from wdi_country
+ where `Income Group` is null and Region is not null
 """)
 
 ```
@@ -268,7 +269,7 @@ commit;
 ## Now, display the country again to verify the change stuck!
 
 run_sql_and_return_html(cnx,"""
-select `Long Name`, `Income Group` from sp25_rutanj_user.wdi_country where `Short Name` = "Venezuela"
+select `Long Name`, `Short Name`, `Income Group` from sp25_rutanj_user.wdi_country where `Short Name` = "Venezuela"
 """)
 
 ```
@@ -283,7 +284,7 @@ select `Long Name`, `Income Group` from sp25_rutanj_user.wdi_country where `Shor
 
 run_sql_and_return_html(cnx,"""
 select Region, `Income Group`, count(*) as CountryCount
-from wdi_country
+from sp25_rutanj_user.wdi_country
 group by Region, `Income Group`
 order by Region, `Income Group`
 """)
@@ -313,7 +314,7 @@ sum(case when `Income Group` = "Lower middle income" then 1 else 0 end) as `Lowe
 sum(case when `Income Group` = "Low income" then 1 else 0 end) as Low,
 sum(case when `Income Group` is null then 1 else 0 end) as Unknown,
 count(*) as Total
-from wdi_country group by Region order by Region
+from sp25_rutanj_user.wdi_country group by Region order by Region
 """)
 
 ```
@@ -379,8 +380,8 @@ order by `Short Name`
 ## (skills: select, where, subqueries, joins)
 
 run_sql_and_return_html(cnx,"""
-with pairings as (select r.Region, i.`Income Group` from (select distinct Region from wdi_country where Region is not null) r cross join (select distinct `Income Group` from wdi_country where `Income Group` is not null) i),
-existing_pairs as (select Region, `Income Group` from wdi_country group by Region, `Income Group`)
+with pairings as (select r.Region, i.`Income Group` from (select distinct Region from sp25_rutanj_user.wdi_country where Region is not null) r cross join (select distinct `Income Group` from sp25_rutanj_user.wdi_country where `Income Group` is not null) i),
+existing_pairs as (select Region, `Income Group` from sp25_rutanj_user.wdi_country group by Region, `Income Group`)
 select pairings.Region, pairings.`Income Group` from pairings left join existing_pairs
 on pairings.Region = existing_pairs.Region
 and pairings.`Income Group` = existing_pairs.`Income Group` where existing_pairs.Region is null
@@ -409,19 +410,19 @@ order by pairings.Region, pairings.`Income Group`
 
 run_sql_and_return_html(cnx,"""
 with counts as (
-select Region, `Income Group`, count(*) as CountryCount from wdi_country
+select Region, `Income Group`, count(*) as CountryCount from sp25_rutanj_user.wdi_country
 where Region is not null and `Income Group` is not null
 group by Region, `Income Group`),
 region_totals as (
-select Region, count(*) as region_total from wdi_country
+select Region, count(*) as region_total from sp25_rutanj_user.wdi_country
 where Region is not null and `Income Group` is not null
 group by Region),
 income_totals as (
-select `Income Group`, count(*) as income_total from wdi_country
+select `Income Group`, count(*) as income_total from sp25_rutanj_user.wdi_country
 where Region is not null and `Income Group` is not null
 group by `Income Group`),
 totals as (
-select count(*) as total from wdi_country
+select count(*) as total from sp25_rutanj_user.wdi_country
 where Region is not null and `Income Group` is not null)
 select c.region, c.`Income Group`, r.region_total, i.income_total, t.total, round((c.CountryCount/t.total) * 100, 2) as PercentageTotal
 from counts c
@@ -445,7 +446,7 @@ order by PercentageTotal desc
 run_sql_and_return_html(cnx,"""
 with total as (
   select count(*) as total 
-  from wdi_country
+  from sp25_rutanj_user.wdi_country
   where Region is not null and `Income Group` is not null
 )
 select 
@@ -457,7 +458,7 @@ select
   round(sum(case when `Income Group` is null then 1 else 0 end) * 100.0 / max(total.total), 2) as Unknown,
   round(count(*) * 100.0 / max(total.total), 2) as Total
 from 
-  wdi_country
+  sp25_rutanj_user.wdi_country
 cross join 
   total
 group by 
@@ -480,8 +481,8 @@ order by
 run_sql_and_return_html(cnx,"""
 with total as (
 select count(*) as total
-from wdi_country where Region is not null and `Income Group` is not null)
-select `Income Group`, count(*) as count, (select total from total) as total, round(count(*)*100.0/(select total from total), 2) as percantage from wdi_country
+from sp25_rutanj_user.wdi_country where Region is not null and `Income Group` is not null)
+select `Income Group`, count(*) as count, (select total from total) as total, round(count(*)*100.0/(select total from total), 2) as percantage from sp25_rutanj_user.wdi_country
 where Region is not null and `Income Group` is not null
 group by `Income Group` order by percantage desc
 """)
