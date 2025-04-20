@@ -385,12 +385,39 @@ order by `Short Name`
 ## (skills: select, where, subqueries, joins)
 
 run_sql_and_return_html(cnx,"""
-with pairings as (select r.Region, i.`Income Group` from (select distinct Region from sp25_rutanj_user.wdi_country where Region is not null) r cross join (select distinct `Income Group` from sp25_rutanj_user.wdi_country where `Income Group` is not null) i),
-existing_pairs as (select Region, `Income Group` from sp25_rutanj_user.wdi_country group by Region, `Income Group`)
-select pairings.Region, pairings.`Income Group` from pairings, 0 as CountryCount left join existing_pairs
-on pairings.Region = existing_pairs.Region
-and pairings.`Income Group` = existing_pairs.`Income Group` where existing_pairs.Region is null
-order by pairings.Region, pairings.`Income Group`
+with pairings as (
+  select 
+    r.Region, 
+    i.`Income Group`
+  from 
+    (select distinct Region from sp25_rutanj_user.wdi_country where Region is not null) r
+  cross join 
+    (select distinct `Income Group` from sp25_rutanj_user.wdi_country where `Income Group` is not null) i
+),
+existing_pairs as (
+  select 
+    Region, 
+    `Income Group`
+  from 
+    sp25_rutanj_user.wdi_country
+  group by 
+    Region, `Income Group`
+)
+select 
+  p.Region, 
+  p.`Income Group`,
+  0 as CountryCount
+from 
+  pairings p
+left join 
+  existing_pairs e
+on 
+  p.Region = e.Region 
+  and p.`Income Group` = e.`Income Group`
+where 
+  e.Region is null
+order by 
+  p.Region, p.`Income Group`
 """)
 
 ```
